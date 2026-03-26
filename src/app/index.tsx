@@ -1,98 +1,83 @@
-import * as Device from 'expo-device';
-import { Platform, StyleSheet } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { useEffect } from "react";
+import { StyleSheet, Text, View } from "react-native";
 
-import { AnimatedIcon } from '@/components/animated-icon';
-import { HintRow } from '@/components/hint-row';
-import { ThemedText } from '@/components/themed-text';
-import { ThemedView } from '@/components/themed-view';
-import { WebBadge } from '@/components/web-badge';
-import { BottomTabInset, MaxContentWidth, Spacing } from '@/constants/theme';
+import { useUpload } from "../hooks/useUpload";
+import { useAppStore } from "../store/useAppStore";
+import { getScore } from "../utils/storage";
 
-function getDevMenuHint() {
-  if (Platform.OS === 'web') {
-    return <ThemedText type="small">use browser devtools</ThemedText>;
-  }
-  if (Device.isDevice) {
-    return (
-      <ThemedText type="small">
-        shake device or press <ThemedText type="code">m</ThemedText> in terminal
-      </ThemedText>
-    );
-  }
-  const shortcut = Platform.OS === 'android' ? 'cmd+m (or ctrl+m)' : 'cmd+d';
-  return (
-    <ThemedText type="small">
-      press <ThemedText type="code">{shortcut}</ThemedText>
-    </ThemedText>
-  );
-}
+import { handleUploadWithRetry } from "../utils/handleUploadWithRetry";
+
+import { resetUpload } from "@/services/uploadService";
+import { takePhoto } from "@/utils/camera";
+import { Button } from "../components/Button";
+import { ImagePreview } from "../components/ImagePreview";
+import { StatusFeedback } from "../components/StatusFeedback";
 
 export default function HomeScreen() {
+  const { image, score, status, error, setImage, setSuccess } = useAppStore();
+
+  const { upload } = useUpload();
+
+  const handleTakePhoto = async () => {
+    const uri = await takePhoto();
+
+    if (uri) {
+      resetUpload();
+      setImage(uri);
+    }
+  };
+
+  const handleUpload = () => {
+    handleUploadWithRetry(upload);
+  };
+
+  useEffect(() => {
+    const loadLastScore = async () => {
+      const saved = await getScore();
+      if (saved !== null) setSuccess(saved);
+    };
+
+    loadLastScore();
+  }, []);
+
   return (
-    <ThemedView style={styles.container}>
-      <SafeAreaView style={styles.safeArea}>
-        <ThemedView style={styles.heroSection}>
-          <AnimatedIcon />
-          <ThemedText type="title" style={styles.title}>
-            Welcome to&nbsp;Expo
-          </ThemedText>
-        </ThemedView>
+    <View style={styles.container}>
+      <Text
+        style={{
+          fontSize: 22,
+          fontWeight: "bold",
+          marginBottom: 20,
+          textAlign: "center",
+        }}
+      >
+        Upload de Imagem
+      </Text>
 
-        <ThemedText type="code" style={styles.code}>
-          get started
-        </ThemedText>
+      <Button
+        title={status === "loading" ? "Processando..." : "Tirar foto"}
+        onPress={handleTakePhoto}
+        disabled={status === "loading"}
+      />
 
-        <ThemedView type="backgroundElement" style={styles.stepContainer}>
-          <HintRow
-            title="Try editing"
-            hint={<ThemedText type="code">src/app/index.tsx</ThemedText>}
-          />
-          <HintRow title="Dev tools" hint={getDevMenuHint()} />
-          <HintRow
-            title="Fresh start"
-            hint={<ThemedText type="code">npm run reset-project</ThemedText>}
-          />
-        </ThemedView>
+      {image && <ImagePreview uri={image} />}
 
-        {Platform.OS === 'web' && <WebBadge />}
-      </SafeAreaView>
-    </ThemedView>
+      {image && (
+        <Button
+          title="Enviar imagem"
+          onPress={handleUpload}
+          loading={status === "loading"}
+        />
+      )}
+
+      <StatusFeedback status={status} error={error} score={score} />
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    justifyContent: 'center',
-    flexDirection: 'row',
-  },
-  safeArea: {
-    flex: 1,
-    paddingHorizontal: Spacing.four,
-    alignItems: 'center',
-    gap: Spacing.three,
-    paddingBottom: BottomTabInset + Spacing.three,
-    maxWidth: MaxContentWidth,
-  },
-  heroSection: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    flex: 1,
-    paddingHorizontal: Spacing.four,
-    gap: Spacing.four,
-  },
-  title: {
-    textAlign: 'center',
-  },
-  code: {
-    textTransform: 'uppercase',
-  },
-  stepContainer: {
-    gap: Spacing.three,
-    alignSelf: 'stretch',
-    paddingHorizontal: Spacing.three,
-    paddingVertical: Spacing.four,
-    borderRadius: Spacing.four,
+    padding: 20,
+    justifyContent: "center",
   },
 });
