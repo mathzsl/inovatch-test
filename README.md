@@ -1,56 +1,75 @@
-# Welcome to your Expo app 👋
+# 📱 Upload de Imagem
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+App simples em React Native (Expo) que permite tirar uma foto, simular o envio para uma API e exibir um score como resultado.
 
-## Get started
+---
 
-1. Install dependencies
-
-   ```bash
-   npm install
-   ```
-
-2. Start the app
-
-   ```bash
-   npx expo start
-   ```
-
-In the output, you'll find options to open the app in a
-
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
-
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
-
-## Get a fresh project
-
-When you're ready, run:
+## 🚀 Como rodar
 
 ```bash
-npm run reset-project
+git clone https://github.com/seu-usuario/seu-repo.git
+cd seu-repo
+npm install
+npx expo start
 ```
 
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
+Depois disso:
 
-### Other setup steps
+* pressione `a` para abrir no emulador Android
+* ou use o Expo Go para escanear o QR Code
 
-- To set up ESLint for linting, run `npx expo lint`, or follow our guide on ["Using ESLint and Prettier"](https://docs.expo.dev/guides/using-eslint/)
-- If you'd like to set up unit testing, follow our guide on ["Unit Testing with Jest"](https://docs.expo.dev/develop/unit-testing/)
-- Learn more about the TypeScript setup in this template in our guide on ["Using TypeScript"](https://docs.expo.dev/guides/typescript/)
+---
 
-## Learn more
+## 🧠 Decisões técnicas
 
-To learn more about developing your project with Expo, look at the following resources:
+**Zustand para estado global**
+Usei Zustand por ser simples e direto. O app controla imagem, status, erro e score, então não há necessidade de uma solução mais complexa.
 
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
+---
 
-## Join the community
+**Separação em camadas**
+Organização do projeto:
 
-Join our community of developers creating universal apps.
+* components (UI)
+* hooks (lógica)
+* services (simulação de API)
+* utils (helpers)
+* store (estado)
 
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+Isso facilita manutenção e leitura do código.
+
+---
+
+**Controle de estado**
+Estados utilizados:
+
+* `idle`
+* `loading`
+* `success`
+* `error`
+
+A UI reage de forma previsível em cada etapa do fluxo.
+
+---
+
+**Simulação de erro no upload**
+A primeira tentativa falha de propósito para validar o fluxo de erro e retry.
+Na segunda tentativa, o envio é concluído com sucesso.
+
+---
+
+**Retry manual**
+Em caso de erro, é exibido um alerta com opção de tentar novamente.
+
+---
+
+**Bloqueio durante envio**
+Durante o upload:
+
+* botões ficam desabilitados
+* evita múltiplos envios simultâneos
+
+---
+
+**Persistência**
+O último score é salvo com AsyncStorage e restaurado ao abrir o app.
